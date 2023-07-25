@@ -91,7 +91,7 @@ def calculate_contact_force(particle_a, particle_b, damping_coefficient):
     gamma = 0.5
 
     # Calculate tangential force based on Haff and Werner model
-    frictional_force = -min(friction_coefficient * abs(normal_force), gamma * relative_tangential_velocity_magnitude)
+    frictional_force = min(friction_coefficient * abs(normal_force), gamma * relative_tangential_velocity_magnitude)
    
     # Calculate tangential force vector
     if relative_tangential_velocity_magnitude > 0:
@@ -113,7 +113,7 @@ def calculate_contact_force(particle_a, particle_b, damping_coefficient):
     torqueB = vectorRB[0] * tangential_force_vector[1] - vectorRB[1] * tangential_force_vector[0]
     particle_a.torque += torqueA
     particle_b.torque += torqueB
-#    print(f"TorqueA {particle_a.torque}, TorqueB {particle_b.torque}")
+    #print(f"TorqueA {particle_a.torque}, TorqueB {particle_b.torque}")
 
  
 
@@ -203,13 +203,6 @@ def main():
     # Particle properties
     radius = 20.0
 
-#    p1 = Particle([360, 300], [18.1, 2.5], spring_constant=1000.0, mass=1.0, radius=radius)
-#    p2 = Particle([440, 300], [-17.1, 1.5], spring_constant=1000.0, mass=1.0, radius=radius)    
-
-#    particles = []
-#    particles.append(p1)
-#    particles.append(p2)
-
     # Initialize pygame
     pygame.init()
 
@@ -220,6 +213,13 @@ def main():
 
     # Generate some particles
     particles = generate_particles(num_particles, screen_width, screen_height, max_velocity=20.0, min_velocity=-20.0, particle_radius=radius)
+
+    #p1 = Particle([400, 300], [0.0, 0.0], spring_constant=1000.0, mass=1.0, radius=radius)
+    #p2 = Particle([362, 260], [00.0, 20.0], spring_constant=1000.0, mass=1.0, radius=radius)    
+
+    #particles = []
+    #particles.append(p1)
+    #particles.append(p2)
 
     # Main loop for the animation
     clock = pygame.time.Clock()
