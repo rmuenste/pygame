@@ -115,9 +115,86 @@ def calculate_contact_force(particle_a, particle_b, damping_coefficient):
     particle_b.torque += torqueB
     #print(f"TorqueA {particle_a.torque}, TorqueB {particle_b.torque}")
 
+    return normal_force_vector, tangential_force_vector
+
+
+# Calculate the spring-dashpot contact force between two particles
+def calculate_contact_force_wall(particle, damping_coefficient):
+
+    # Check for collisions with window boundaries
+#    if particle.position[0] <= particle.radius or particle.position[0] >= screen_width - particle.radius:
+#        particle.velocity[0] *= -1
+
+    xq = np.zeros(2, dtype=float)
+    if particle.position[1] < particle.radius:
+        xq = np.array([particle.position[0],0.0])
+
+        # Dist center to wallpoint
+        dist = np.linalg.norm(particle.position - xq)
+
+        # Overlap
+        xi_jq = particle.radius - dist
+        print(f"position {particle.position}")
+        print(f"wallpoint {xq}")
+        print(f"distance {dist} {xi_jq}")
+
+        xi = xi_jq
+        n_jq = (particle.position - xq) / np.linalg.norm(particle.position - xq)
+        print(f"normal {n_jq}")
+        contact_point = particle.position + (particle.radius - 0.5 * xi) * n_jq 
+
+        norm_vel_contact = np.dot(particle.velocity, n_jq)
+
+        spring_displacement = xi 
+
+        spring_force_magnitude = particle.spring_constant * spring_displacement
+    
+        damping_force = damping_coefficient * norm_vel_contact 
+
+        normal_force = spring_force_magnitude - damping_force
+
+        normal_force_vector = normal_force * n_jq
+        particle.force += normal_force_vector 
+        print(f"wall force {normal_force_vector}")
+        return normal_force_vector
+#
+#    # Calculate relative tangential velocity
+#    relative_tangential_velocity = relative_velocity - np.dot(relative_velocity, relative_position) * relative_position
+#
+#    # Calculate magnitude of relative tangential velocity
+#    relative_tangential_velocity_magnitude = np.linalg.norm(relative_tangential_velocity)
+#
+#    friction_coefficient = 0.3
+#    gamma = 0.5
+#
+#    # Calculate tangential force based on Haff and Werner model
+#    frictional_force = min(friction_coefficient * abs(normal_force), gamma * relative_tangential_velocity_magnitude)
+#   
+#    # Calculate tangential force vector
+#    if relative_tangential_velocity_magnitude > 0:
+#        tangential_force_vector = frictional_force * (relative_tangential_velocity / relative_tangential_velocity_magnitude)
+#    else:
+#        tangential_force_vector = np.zeros(2, dtype=float)    
+#
+#    contactPoint = particle_a.position + relative_position * 0.5
+#    vectorRA = contactPoint - particle_a.position
+#    vectorRB = contactPoint - particle_b.position
+#
+##    # Stack the two vectors vertically to create a 2x2 matrix
+##    matrix = np.vstack((vectorRA, normal_force_vector))
+##
+##    # Calculate the determinant of the matrix
+##    determinant = np.linalg.det(matrix)
+#
+#    torqueA = vectorRA[0] * tangential_force_vector[1] - vectorRA[1] * tangential_force_vector[0]
+#    torqueB = vectorRB[0] * tangential_force_vector[1] - vectorRB[1] * tangential_force_vector[0]
+#    particle_a.torque += torqueA
+#    particle_b.torque += torqueB
+#    #print(f"TorqueA {particle_a.torque}, TorqueB {particle_b.torque}")
+
  
 
-    return normal_force_vector, tangential_force_vector
+#    return normal_force_vector #, tangential_force_vector
 
 # Calculate the net force on two particles based on contact
 def calculate_net_force(particle_a, particle_b, damping_coefficient):
@@ -212,14 +289,14 @@ def main():
     pygame.display.set_caption("DEM Simulation Animation")
 
     # Generate some particles
-    particles = generate_particles(num_particles, screen_width, screen_height, max_velocity=20.0, min_velocity=-20.0, particle_radius=radius)
+    #particles = generate_particles(num_particles, screen_width, screen_height, max_velocity=20.0, min_velocity=-20.0, particle_radius=radius)
 
     #p1 = Particle([400, 300], [0.0, 0.0], spring_constant=1000.0, mass=1.0, radius=radius)
-    #p2 = Particle([362, 260], [00.0, 20.0], spring_constant=1000.0, mass=1.0, radius=radius)    
+    p2 = Particle([362, 100], [00.0, -20.0], spring_constant=1000.0, mass=1.0, radius=radius)    
 
-    #particles = []
+    particles = []
     #particles.append(p1)
-    #particles.append(p2)
+    particles.append(p2)
 
     # Main loop for the animation
     clock = pygame.time.Clock()
@@ -241,13 +318,14 @@ def main():
             for j in range(i+1, len(particles)): 
               check_and_handle_particle_overlap(particles[i], particles[j], damping_coefficient)
 
+        # Check for collisions with window boundaries
+        for particle in particles:
+            calculate_contact_force_wall(particle, damping_coefficient)
+            #check_particle_collisions_with_boundary(particle, screen_width, screen_height)
+
         # Update particle positions based on their velocities
         for particle in particles:
             update_position_velocity(particle, timestep)
-
-        # Check for collisions with window boundaries
-        for particle in particles:
-            check_particle_collisions_with_boundary(particle, screen_width, screen_height)
 
         # Clear the screen
         screen.fill((255, 255, 255))
